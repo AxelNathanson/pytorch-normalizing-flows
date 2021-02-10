@@ -1,0 +1,79 @@
+import numpy as np
+import torch
+from torch.utils.data import Dataset
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_moons, make_circles
+
+
+############ Dataset and function to generate artificiall gaussians #################################
+def make_art_gaussian(n_gaussians=3, n_samples=1000):
+    radius = 2.5
+    angles = np.linspace(0, 2 * np.pi, n_gaussians, endpoint=False)
+
+    cov = np.array([[.1, 0], [0, .1]])
+    results = []
+
+    for angle in angles:
+        results.append(
+            np.random.multivariate_normal(radius * np.array([np.cos(angle), np.sin(angle)]), cov,
+                                          int(n_samples / 3) + 1))
+
+    return np.random.permutation(np.concatenate(results))
+
+
+class FlowDataset(Dataset):
+    def __init__(self, dataset_type, num_samples=1000, seed=0, **kwargs):
+        """
+        Dataset used to load different artificial datasets to train normalizing flows on.
+
+        Args:
+        dataset_type (str): Choose type from: MultiVariateNormal, Moons, Circles or MultipleGaussians
+        num_samples (int): Number of samples to draw.
+        seed (int): Random seed.
+        kwargs: Specific parameters for the different distributions.
+        """
+        np.random.seed(seed)
+        if dataset_type == 'MultiVariateNormal':
+            mean = kwargs.pop('mean', [0, 3])
+            cov = kwargs.pop('mean', np.diag([.1, .1]))
+            self.data = np.random.multivariate_normal(mean, cov, num_samples)
+        elif dataset_type == 'Moons':
+            noise = kwargs.pop('noise', .1)
+            self.data = make_moons(num_samples, noise=noise, random_state=seed, shuffle=True)[0]
+        elif dataset_type == 'Circles':
+            factor = kwargs.pop('factor', .5)
+            noise = kwargs.pop('noise', .05)
+            self.data = make_circles(num_samples, noise=noise, factor=factor, random_state=seed, shuffle=True)[0]
+        elif dataset_type == 'MultipleGaussians':
+            num_gaussians = kwargs.pop('num_gaussians', 3)
+            self.data = make_art_gaussian(num_gaussians, num_samples)
+        else:
+            raise NotImplementedError
+
+        self.num_samples = num_samples
+
+    def __len__(self):
+        return self.num_samples
+
+    def __getitem__(self, index):
+        return torch.from_numpy(self.data[index]).type(torch.FloatTensor)
+
+
+########################## Plotting functions ################################
+def plot_density(model, true_dist=None, num_samples=100, mesh_size=4.):
+    x_mesh, y_mesh = np.meshgrid(np.linspace(- mesh_size, mesh_size, num=num_samples),
+                                 np.linspace(- mesh_size, mesh_size, num=num_samples))
+
+    cords = np.stack((x_mesh, y_mesh), axis=2)
+    cords_reshape = cords.reshape([-1, 2])
+    log_prob = np.zeros((num_samples ** 2))
+
+    for i in range(0, num_samples ** 2, num_samples):
+        data = torch.from_numpy(cords_reshape[i:i + num_samples, :]).float()
+        log_prob[i:i + num_samples] = model.log_probability(data).cpu().detach().numpy()
+
+    plt.scatter(cords_reshape[:, 0], cords_reshape[:, 1], c=np.exp(log_prob))
+    plt.colorbar()
+    if true_dist is not None:
+        plt.scatter(true_dist[:, 0], true_dist[:, 1], c='orange', alpha=.05)
+    plt.show()
