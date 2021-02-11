@@ -3,6 +3,7 @@ import torch
 from torch.utils.data import Dataset
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_moons, make_circles
+import inflect
 
 
 ############ Dataset and function to generate artificiall gaussians #################################
@@ -77,3 +78,29 @@ def plot_density(model, true_dist=None, num_samples=100, mesh_size=4.):
     if true_dist is not None:
         plt.scatter(true_dist[:, 0], true_dist[:, 1], c='orange', alpha=.05)
     plt.show()
+
+
+def plot_each_step(model, num_samples=200):
+    data = model.sample_each_step(num_samples)
+    len_data = len(data)
+
+    fig, axis = plt.subplots(2, int((len_data+1)/2), figsize=(15, 10),
+                             sharex=True, sharey=True)
+    p = inflect.engine()
+
+    num_plot = 0
+    for i in range(len_data):
+        if i == round((len_data+1)/2):
+            axis.flatten()[num_plot].axis('off')
+            num_plot += 1
+
+        d = data[i]
+        ax = axis.flatten()[num_plot]
+        if i == 0:
+            title = 'Original data'
+        else:
+            title = p.ordinal(i) + ' layer'
+
+        ax.scatter(d[:, 0], d[:, 1], alpha=.2)
+        ax.set_title(title)
+        num_plot += 1

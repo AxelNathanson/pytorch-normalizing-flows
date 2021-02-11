@@ -128,4 +128,15 @@ class RealNVP(nn.Module):
 
         return x, log_prob
 
+    def sample_each_step(self, num_samples):
+        samples = []
+
+        x = self.distribution.sample((num_samples,))
+        samples.append(x.detach().numpy())
+
+        for layer in self.layers:
+            x, _ = layer.forward(x)
+            samples.append(x.detach().numpy())
+
+        return samples
 
