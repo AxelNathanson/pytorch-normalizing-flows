@@ -1,4 +1,4 @@
-# RealNVP and a simple Normalizing Flow implemented in Pytorch
+# RealNVP and simple Normalizing Flow in Pytorch
 
 In this repo, I have implemented two different normalizing flows in Pytorch and tested them on three different toy datasets. The two flows implemented are
 * A simple affine transform
