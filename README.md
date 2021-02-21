@@ -4,7 +4,7 @@ In this repo, I have implemented two different normalizing flows in Pytorch and 
 * A simple affine transform
 * Real NVP [[1]](#1)
 
-The implementations of the flows are located in [flow_models](flow_models.py) while a short presentation of the data and training is available in [Normalizinf Flows with Pytorch](Normalizing_Flows_with_Pytorch.ipynb).
+The implementations of the flows are located in [flow_models](flow_models.py) while a short presentation of the data and training is available in [Normalizing Flows with Pytorch](Normalizing_Flows_with_Pytorch.ipynb).
 
 A flow can, if its transform is invertible, be used to both learn a probability density function and sample from it. Both flows implemented in this repo are invertible, so example samples drawn from the flows are presented in the notebook. 
 
