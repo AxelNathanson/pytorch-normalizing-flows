@@ -104,3 +104,22 @@ def plot_each_step(model, num_samples=200):
         ax.scatter(d[:, 0], d[:, 1], alpha=.2)
         ax.set_title(title)
         num_plot += 1
+
+
+###########################
+def generate_image_mask(in_channels, image_width, num_layers):
+    count = 0
+    vec = []
+    for i in range(image_width**2*in_channels):
+        count += 1
+        if i % image_width == 0 and image_width % 2 == 0:
+            count += 1
+        vec.append(count % 2.)
+    mask = torch.tensor(vec).reshape(in_channels, image_width, image_width)
+    masks = []
+    for i in range(num_layers):
+        if i % 2 == 0:
+            masks.append(mask)
+        else:
+            masks.append(1. - mask)
+    return masks
